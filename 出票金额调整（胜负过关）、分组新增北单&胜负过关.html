@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出票金额与店员账号管理原型</title>
+    <style>
+        /* 全局样式重置 */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        /* 页面背景与左右并排布局 */
+        body { 
+            background-color: #e5e5e5; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* 顶部演示说明 */
+        .demo-note {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            max-width: 800px;
+            width: 100%;
+        }
+        .demo-note strong { color: #007aff; }
+
+        /* 双端容器 */
+        .screens-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        /* 移动端容器模拟 */
+        .app-container {
+            width: 375px;
+            flex-shrink: 0;
+            background: #f7f7f7;
+            position: relative;
+            padding-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            height: fit-content;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        /* 隐藏滚动条但保留滚动功能 */
+        .app-container::-webkit-scrollbar { width: 4px; }
+        .app-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+        /* 顶部导航栏 */
+        .header {
+            background-color: #007aff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header .title { font-size: 16px; font-weight: 600; flex-grow: 1; text-align: center; margin-right: -20px; }
+        .header .back { font-size: 20px; font-weight: bold; cursor: pointer; }
+        .header .right-btn { font-size: 14px; color: white; cursor: pointer; }
+
+        /* 视图1：出票金额 */
+        .list-group { background: white; margin-bottom: 15px; }
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            background: white;
+        }
+        .list-item:last-child { border-bottom: none; }
+        
+        .checkbox {
+            width: 18px; height: 18px;
+            border: 1px solid #ccc; border-radius: 4px;
+            margin-right: 15px;
+            display: flex; align-items: center; justify-content: center;
+            color: transparent; font-size: 12px;
+            cursor: pointer;
+        }
+        .checkbox.checked { background: #007aff; border-color: #007aff; color: white; }
+        
+        .item-label { flex-grow: 1; font-size: 15px; color: #333; }
+        .item-value { font-size: 15px; color: #666; margin-right: 10px; }
+        .item-arrow { color: #ccc; font-size: 14px; }
+
+        /* 开关 */
+        .switch {
+            width: 46px; height: 26px;
+            background: #e5e5e5; border-radius: 13px;
+            position: relative; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .switch.on { background: #34c759; }
+        .switch::after {
+            content: ''; position: absolute;
+            width: 22px; height: 22px;
+            background: white; border-radius: 50%;
+            top: 2px; left: 2px;
+            transition: left 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .switch.on::after { left: 22px; }
+
+        /* 视图2：店员账号 */
+        .group-card {
+            background: white;
+            border-radius: 10px;
+            margin: 15px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .group-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .group-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 8px; display: flex; align-items: center; }
+        .group-title::before { content: '▼'; font-size: 10px; margin-right: 5px; color: #666; }
+        
+        /* 金额胶囊容器改造：支持两行 */
+        .pill-container { display: flex; flex-direction: column; gap: 6px; margin-top: 5px; }
+        .pill-row { display: flex; gap: 8px; }
+        
+        .pill {
+            background: #f0f5ff;
+            border: 1px solid #d0e3ff;
+            color: #007aff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex; align-items: center;
+            white-space: nowrap;
+        }
+        .pill span { font-weight: bold; margin-left: 4px; }
+        
+        .group-actions { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+        .btn-save {
+            background: #e0e0e0; color: #999;
+            border: none; padding: 6px 12px; border-radius: 6px;
+            font-size: 12px; cursor: not-allowed;
+            transition: all 0.3s;
+        }
+        .btn-save.active { background: #007aff; color: white; cursor: pointer; }
+        .btn-delete {
+            background: white; color: #ff3b30;
+            border: 1px solid #ff3b30; padding: 5px 12px; border-radius: 6px;
+            font-size: 12px; cursor: pointer;
+        }
+
+        .staff-list { border-top: 1px solid #f0f0f0; padding-top: 10px; }
+        .staff-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #f9f9f9;
+        }
+        .staff-item:last-child { border-bottom: none; }
+        .staff-info { flex-grow: 1; }
+        .staff-name { font-size: 14px; color: #333; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .staff-status { font-size: 11px; color: #34c759; }
+        .staff-status.stop { color: #999; }
+        .staff-quota { font-size: 12px; color: #999; }
+        .btn-move { color: #007aff; font-size: 13px; cursor: pointer; padding: 5px; }
+
+        /* 模态弹窗 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white; width: 85%; max-width: 320px;
+            border-radius: 12px; padding: 20px;
+            text-align: center; position: relative;
+        }
+        
+        .modal-header { font-size: 16px; font-weight: bold; margin-bottom: 20px; color: #333; }
+        .modal-close {
+            position: absolute; right: 15px; top: 15px;
+            color: #999; font-size: 18px; cursor: pointer;
+        }
+        .modal-input-wrapper {
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid #eee; border-radius: 8px;
+            padding: 10px 15px; margin-bottom: 15px;
+            background: #fafafa;
+        }
+        .modal-input {
+            border: none; background: transparent;
+            font-size: 24px; text-align: center;
+            width: 100%; outline: none; color: #333;
+        }
+        .modal-input-unit { font-size: 16px; color: #666; margin-left: 5px; }
+        .modal-hint { font-size: 11px; color: #999; margin-bottom: 20px; line-height: 1.4; }
+        .btn-confirm {
+            background: #007aff; color: white; border: none;
+            width: 100%; padding: 12px; border-radius: 25px;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部简短演示说明 -->
+    <div class="demo-note">
+        <p><strong>演示说明：</strong></p>
+        <p>1. 第一个页面新增“胜负过关”，使得店员该彩种出票金额可被控制。</p>
+        <p>2. 第二个页面新增“北单”、“胜负过关”金额控制，0 表示不受控制。</p>
+    </div>
+
+    <!-- 左右并排的双端容器 -->
+    <div class="screens-container">
+        
+        <!-- ================= 页面1：出票金额 ================= -->
+        <div class="app-container">
+            <div class="header">
+                <div class="back">＜</div>
+                <div class="title">出票金额</div>
+                <div style="width: 20px;"></div>
+            </div>
+
+            <div class="list-group" style="margin-top: 10px;">
+                <div class="list-item">
+                    <div class="item-label">出票金额</div>
+                    <div class="switch on" onclick="this.classList.toggle('on')"></div>
+                </div>
+            </div>
+
+            <div class="list-group">
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">全部彩种</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <div class="list-item">
+                    <div class="checkbox checked" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">竞彩足球</div>
+                    <div class="item-value">20 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">竞彩篮球</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">北单</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <!-- 新增：胜负过关 -->
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">胜负过关</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">双色球</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">3D</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+                <div class="list-item">
+                    <div class="checkbox" onclick="this.classList.toggle('checked')"></div>
+                    <div class="item-label">七乐彩</div>
+                    <div class="item-value">0 元</div>
+                    <div class="item-arrow">＞</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 页面2：店员账号 ================= -->
+        <div class="app-container">
+            <div class="header">
+                <div class="back">＜</div>
+                <div class="title">店员账号</div>
+                <div class="right-btn">+ 分组</div>
+            </div>
+
+            <!-- 分组卡片 1 -->
+            <div class="group-card" id="group-1">
+                <div class="group-header">
+                    <div>
+                        <div class="group-title">新分组3</div>
+                        
+                        <!-- 调整布局：足篮一行，北单胜负过关一行 -->
+                        <div class="pill-container">
+                            <div class="pill-row">
+                                <div class="pill" onclick="openModal('group-1', '竞彩足球', '0')">足 <span class="val">0</span> 元</div>
+                                <div class="pill" onclick="openModal('group-1', '竞彩篮球', '10')">篮 <span class="val">10</span> 元</div>
+                            </div>
+                            <div class="pill-row">
+                                <div class="pill" onclick="openModal('group-1', '北单', '0')">北单 <span class="val">0</span> 元</div>
+                                <div class="pill" onclick="openModal('group-1', '胜负过关', '0')">胜负过关 <span class="val">0</span> 元</div>
+                            </div>
+                            <span style="font-size: 12px; color: #999; margin-top: 2px;">1人</span>
+                        </div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-save" onclick="saveGroup('group-1')">保存</button>
+                        <button class="btn-delete">删组</button>
+                    </div>
+                </div>
+                <div class="staff-list">
+                    <div class="staff-item">
+                        <div class="staff-info">
+                            <div class="staff-name">lxl <span class="staff-status">正在接单</span></div>
+                            <div class="staff-quota">足 0 · 篮 10</div>
+                        </div>
+                        <div class="btn-move">移入</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分组卡片 2 -->
+            <div class="group-card" id="group-2">
+                <div class="group-header">
+                    <div>
+                        <div class="group-title">2000</div>
+                        <!-- 调整布局 -->
+                        <div class="pill-container">
+                            <div class="pill-row">
+                                <div class="pill" onclick="openModal('group-2', '竞彩足球', '10001')">足 <span class="val">10001</span> 元</div>
+                                <div class="pill" onclick="openModal('group-2', '竞彩篮球', '2000')">篮 <span class="val">2000</span> 元</div>
+                            </div>
+                            <div class="pill-row">
+                                <div class="pill" onclick="openModal('group-2', '北单', '0')">北单 <span class="val">0</span> 元</div>
+                                <div class="pill" onclick="openModal('group-2', '胜负过关', '0')">胜负过关 <span class="val">0</span> 元</div>
+                            </div>
+                            <span style="font-size: 12px; color: #999; margin-top: 2px;">3人</span>
+                        </div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-save" onclick="saveGroup('group-2')">保存</button>
+                        <button class="btn-delete">删组</button>
+                    </div>
+                </div>
+                <div class="staff-list">
+                    <div class="staff-item">
+                        <div class="staff-info">
+                            <div class="staff-name">122 <span class="staff-status">正在接单</span></div>
+                            <div class="staff-quota">足 10001 · 篮 2000</div>
+                        </div>
+                        <div class="btn-move">移入</div>
+                    </div>
+                    <div class="staff-item">
+                        <div class="staff-info">
+                            <div class="staff-name">lxy <span class="staff-status">正在接单</span></div>
+                            <div class="staff-quota">足 10001 · 篮 2000</div>
+                        </div>
+                        <div class="btn-move">移入</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 未分组店员 -->
+            <div class="group-card">
+                <div class="group-header" style="justify-content: center; margin-bottom: 5px;">
+                    <div class="group-title" style="margin-bottom: 0;">未分组店员</div>
+                </div>
+                <div class="staff-list">
+                    <div class="staff-item">
+                        <div class="staff-info">
+                            <div class="staff-name">打票员林01 <span class="staff-status">正在接单</span></div>
+                            <div class="staff-quota">足 20 · 篮 0</div>
+                        </div>
+                        <div class="btn-move">移入</div>
+                    </div>
+                    <div class="staff-item">
+                        <div class="staff-info">
+                            <div class="staff-name">打票员林02 <span class="staff-status">正在接单</span></div>
+                            <div class="staff-quota">足 1000 · 篮 500</div>
+                        </div>
+                        <div class="btn-move">移入</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- ================= 模态弹窗 ================= -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal()">✕</div>
+            <div class="modal-header" id="modalTitle">竞彩篮球</div>
+            <div class="modal-input-wrapper">
+                <input type="number" class="modal-input" id="modalInput" value="2000" min="0">
+                <div class="modal-input-unit">元</div>
+            </div>
+            <div class="modal-hint">改的是组草稿；点上「保存」后才会同步到组员。</div>
+            <button class="btn-confirm" onclick="confirmModal()">确定</button>
+        </div>
+    </div>
+
+    <script>
+        // 记录当前正在编辑的分组和彩种
+        let currentGroupId = '';
+        let currentSport = '';
+        let currentPillElement = null;
+
+        // 打开编辑弹窗
+        function openModal(groupId, sport, currentValue) {
+            currentGroupId = groupId;
+            currentSport = sport;
+            
+            // 找到当前点击的胶囊元素
+            const pills = document.querySelectorAll(`#${groupId} .pill`);
+            pills.forEach(pill => {
+                if (pill.innerText.includes(sport) || (sport === '竞彩足球' && pill.innerText.includes('足')) || (sport === '竞彩篮球' && pill.innerText.includes('篮'))) {
+                    currentPillElement = pill;
+                }
+            });
+
+            // 设置弹窗内容
+            document.getElementById('modalTitle').innerText = sport;
+            document.getElementById('modalInput').value = currentValue;
+            
+            // 显示弹窗
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentGroupId = '';
+            currentSport = '';
+            currentPillElement = null;
+        }
+
+        // 确认修改
+        function confirmModal() {
+            const newValue = document.getElementById('modalInput').value;
+            
+            if (currentPillElement && newValue !== '') {
+                // 更新胶囊上的文字显示
+                let prefix = '';
+                if (currentSport === '竞彩足球') prefix = '足';
+                else if (currentSport === '竞彩篮球') prefix = '篮';
+                else prefix = currentSport;
+
+                currentPillElement.innerHTML = `${prefix} <span class="val">${newValue}</span> 元`;
+
+                // 激活对应分组的保存按钮
+                const saveBtn = document.querySelector(`#${currentGroupId} .btn-save`);
+                if (saveBtn) {
+                    saveBtn.classList.add('active');
+                    saveBtn.disabled = false;
+                }
+            }
+            
+            closeModal();
+        }
+
+        // 点击保存按钮
+        function saveGroup(groupId) {
+            const saveBtn = document.querySelector(`#${groupId} .btn-save`);
+            if (saveBtn.classList.contains('active')) {
+                // 模拟同步过程
+                alert('保存成功！已将最新的金额限制同步给该分组下的所有组员。');
+                
+                // 保存后，按钮恢复默认状态
+                saveBtn.classList.remove('active');
+                saveBtn.disabled = true;
+            }
+        }
+
+        // 点击遮罩层关闭弹窗
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>订单查询 - 手机原型</title>
+<style>
+    :root {
+        --primary-color: #1E7FFF;
+        --text-main: #333333;
+        --text-sub: #999999;
+        --bg-color: #F5F6F8;
+        --border-color: #E0E0E0;
+        --red-color: #EE2222;
+        --orange-color: #FF6600;
+        --card-radius: 8px;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Segoe UI, Arial, Roboto, "PingFang SC", "miui", "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
+        background-color: #E8EBF0;
+        color: var(--text-main);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 10px;
+        min-height: 100vh;
+    }
+
+    /* ========== 原型说明区域 ========== */
+    .prototype-notice {
+        width: 100%;
+        max-width: 414px;
+        background: #FFFBE6;
+        border: 1px solid #FFE58F;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 15px;
+        font-size: 13px;
+        line-height: 1.8;
+        color: #D46B08;
+    }
+    .prototype-notice h4 {
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: #AD4E00;
+    }
+    .prototype-notice ul {
+        padding-left: 18px;
+        margin-bottom: 0;
+    }
+    .prototype-notice .warning {
+        color: #CF1322;
+        font-weight: bold;
+    }
+
+    /* ========== 手机主容器 ========== */
+    .phone-mockup {
+        width: 100%;
+        max-width: 414px;
+        height: 812px;
+        max-height: 90vh;
+        background: #FFFFFF;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 8px solid #333;
+    }
+
+    /* 顶部导航 */
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 44px;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0 16px;
+        position: relative;
+        z-index: 999; 
+        flex-shrink: 0;
+    }
+
+    .header .back {
+        font-size: 22px;
+        font-weight: 300;
+        cursor: pointer;
+        width: 24px;
+        display: flex;
+        align-items: center;
+    }
+
+    .header .title {
+        font-size: 18px;
+        font-weight: 500;
+        flex: 1;
+        text-align: center;
+    }
+
+    .header .filter-icon {
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    .filter-icon svg {
+        fill: white;
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        background-color: #FFFFFF;
+        height: 44px;
+        line-height: 44px;
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+        white-space: nowrap;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab-item {
+        flex: 1;
+        text-align: center;
+        font-size: 15px;
+        color: #333;
+        position: relative;
+        padding: 0 10px;
+        min-width: 70px;
+    }
+
+    .tab-item.active {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+
+    .tab-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 24px;
+        height: 2px;
+        background-color: var(--primary-color);
+        border-radius: 2px;
+    }
+
+    /* 订单列表 */
+    .order-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        padding-bottom: 20px;
+        background: var(--bg-color);
+    }
+
+    .order-card {
+        background: #FFFFFF;
+        border-radius: var(--card-radius);
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        display: block; 
+    }
+
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .card-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .card-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .icon-dlt { background: #E33D3D; color: white; }
+    .icon-jc { background: #1E7FFF; color: white; }
+    .icon-jqc { background: #FF8C00; color: white; }
+
+    .card-title {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .card-amount {
+        color: var(--red-color);
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .card-info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--text-sub);
+        margin-bottom: 8px;
+    }
+    .card-info-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .status-text { color: #666; }
+    .status-orange { color: var(--orange-color); }
+    .status-grey { color: var(--text-sub); }
+
+    /* ========== 筛选弹层样式 ========== */
+    .overlay {
+        position: absolute;
+        top: 44px; 
+        left: 0;
+        width: 100%;
+        height: calc(100% - 44px);
+        background: rgba(0,0,0,0.5);
+        z-index: 100;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .overlay.show { display: block; opacity: 1; }
+
+    .filter-panel {
+        position: absolute;
+        top: 44px;
+        left: 0;
+        width: 100%;
+        background: #FFFFFF;
+        z-index: 101;
+        transform: translateY(-100%);
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        padding: 18px 15px 20px;
+        max-height: calc(100% - 44px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
+    .filter-panel.show { transform: translateY(0); }
+
+    .filter-section { margin-bottom: 22px; }
+
+    .filter-section-title {
+        font-size: 15px;
+        font-weight: 400;
+        color: #333;
+        margin-bottom: 12px;
+    }
+
+    /* 网格按钮 */
+    .btn-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .btn-option {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 34px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        font-size: 13px;
+        color: #333;
+        background: #FFFFFF;
+        transition: all 0.1s;
+        cursor: pointer;
+    }
+
+    .btn-option.active {
+        background: var(--primary-color);
+        color: #FFFFFF;
+        border-color: var(--primary-color);
+    }
+
+    /* 二级玩法面板 */
+    .sub-play-panel {
+        margin-top: 12px;
+        padding: 12px 10px;
+        background: #F8F9FB;
+        border-radius: 4px;
+        display: none;
+    }
+    
+    .sub-play-panel.show { display: block; }
+
+    .sub-play-panel .filter-section-title {
+        font-size: 13px;
+        margin-bottom: 10px;
+        color: #666;
+    }
+
+    .sub-play-panel .btn-option:not(.active) { background: #fff; }
+    .sub-play-panel .btn-option { height: 32px; }
+
+    /* 订单类型按钮组 */
+    .btn-group { display: flex; gap: 10px; }
+    .btn-group .btn-option { flex: 1; }
+
+    /* 时间选择 */
+    .time-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .time-selector .btn-option { width: 60px; flex: none; }
+
+    .date-input {
+        flex: 1;
+        width: 100%; 
+        min-width: 0;
+        height: 34px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        padding: 0 4px;
+        font-size: 13px;
+        color: #333;
+        text-align: center;
+        outline: none;
+        background: #fff;
+    }
+
+    /* 条件查询输入框 */
+    .input-row {
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .input-row label {
+        width: 65px;
+        font-size: 14px;
+        color: #333;
+        flex: none;
+    }
+
+    .input-row input {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        height: 38px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        padding: 0 12px;
+        font-size: 14px;
+        outline: none;
+        color: #333;
+    }
+
+    .input-row input::placeholder { color: #C0C4CC; }
+    .input-row input:focus { border-color: var(--primary-color); }
+
+    /* 金额输入 */
+    .amount-group {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+    }
+    .amount-group input {
+        width: 100%;
+        min-width: 0;
+        text-align: center;
+        height: 38px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        font-size: 14px;
+        outline: none;
+    }
+    .amount-group input:focus { border-color: var(--primary-color); }
+    .amount-group span {
+        padding: 0 10px;
+        color: #999;
+        flex: none;
+    }
+
+    /* 错误提示 */
+    .error-msg {
+        color: var(--red-color);
+        font-size: 12px;
+        margin-top: 8px;
+        display: none;
+    }
+    .error-msg.show { display: block; }
+
+    /* 底部按钮 */
+    .filter-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .filter-actions button {
+        flex: 1;
+        height: 42px;
+        border-radius: 3px;
+        font-size: 16px;
+        border: none;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .btn-cancel { background: #D8D8D8; color: #FFFFFF; }
+    .btn-confirm { background: var(--primary-color); color: #FFFFFF; }
+</style>
+</head>
+<body>
+
+<!-- 原型说明区块 -->
+<div class="prototype-notice">
+    <h4>📱 手机原型说明</h4>
+    <ul>
+        <li>1、点击竞彩足球，会出现足球玩法供单选选择。</li>
+        <li>2、点击竞彩篮球，会出现篮球玩法供单选选择。</li>
+        <li>3、金额筛选：
+            <br>•仅填最小值X：上限不设
+            <br>•仅填最大值Y：下限不设
+            <br>•二者均填，取 X≤金额≤Y
+            <br>•最小值＞最大值 → 报错<span class="warning">【输入金额有误】</span>
+        </li>
+    </ul>
+</div>
+
+<!-- 手机主体 -->
+<div class="phone-mockup">
+    <!-- 顶部导航 -->
+    <header class="header">
+        <div class="back">〈</div>
+        <div class="title">订单查询</div>
+        <div class="filter-icon" id="btnOpenFilter">
+            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M862.4 133.8H161.6c-32 0-51.2 36.8-32 64l236.8 326.4V800c0 16 6.4 28.8 19.2 38.4l108.8 64c22.4 12.8 48-3.2 48-28.8V524.2l236.8-326.4c19.2-27.2-3.2-64-35.2-64z" fill="#ffffff"/></svg>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs">
+        <div class="tab-item active">全部</div>
+        <div class="tab-item">待出票</div>
+        <div class="tab-item">已中奖</div>
+        <div class="tab-item">未开奖</div>
+        <div class="tab-item">撤单</div>
+    </nav>
+
+    <!-- 订单列表 -->
+    <div class="order-list" id="orderList">
+        <div class="order-card">
+            <div class="card-top">
+                <div class="card-title-wrap">
+                    <div class="card-icon icon-dlt">大</div>
+                    <div class="card-title">大乐透</div>
+                </div>
+                <div class="card-amount">¥ 20.00</div>
+            </div>
+            <div class="card-info-row">
+                <span>下单时间:2026-10-07 23:08:29</span>
+                <span class="status-grey">未出票</span>
+            </div>
+            <div class="card-info-row">
+                <span>截止时间:2026-10-10 21:00:00</span>
+            </div>
+        </div>
+
+        <div class="order-card">
+            <div class="card-top">
+                <div class="card-title-wrap">
+                    <div class="card-icon icon-jc">单</div>
+                    <div class="card-title">单场胜负过关</div>
+                </div>
+                <div class="card-amount">¥ 200.00</div>
+            </div>
+            <div class="card-info-row">
+                <span>下单时间:2026-10-07 16:02:00</span>
+                <span class="status-grey">截止撤单</span>
+            </div>
+            <div class="card-info-row">
+                <span>截止时间:2026-10-07 23:55:00</span>
+            </div>
+        </div>
+
+        <div class="order-card">
+            <div class="card-top">
+                <div class="card-title-wrap">
+                    <div class="card-icon icon-jqc">半</div>
+                    <div class="card-title">单场胜平负</div>
+                </div>
+                <div class="card-amount">¥ 800.00</div>
+            </div>
+            <div class="card-info-row">
+                <span>下单时间:2026-10-06 11:03:30</span>
+                <span class="status-grey">已出票</span>
+            </div>
+            <div class="card-info-row">
+                <span>出票时间:2026-10-06 11:03:38</span>
+            </div>
+            <div class="card-info-row">
+                <span class="status-orange">待传票</span>
+                <span class="status-grey">未中奖</span>
+            </div>
+        </div>
+        
+        <div class="order-card">
+            <div class="card-top">
+                <div class="card-title-wrap">
+                    <div class="card-icon icon-jqc">半</div>
+                    <div class="card-title">单场胜平负</div>
+                </div>
+                <div class="card-amount">¥ 200.00</div>
+            </div>
+            <div class="card-info-row">
+                <span>下单时间:2026-10-06 10:59:02</span>
+                <span class="status-grey">已出票</span>
+            </div>
+            <div class="card-info-row">
+                <span>出票时间:2026-10-06 11:00:50</span>
+            </div>
+            <div class="card-info-row">
+                <span class="status-orange">待传票</span>
+                <span class="status-grey">未中奖</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 筛选面板 -->
+    <div class="filter-panel" id="filterPanel">
+        
+        <div class="filter-section">
+            <div class="filter-section-title">彩种选择</div>
+            <div class="btn-grid" id="lotteryGrid">
+                <div class="btn-option active" data-type="all">全部彩种</div>
+                <div class="btn-option" data-type="football">竞彩足球</div>
+                <div class="btn-option" data-type="basketball">竞彩篮球</div>
+                <div class="btn-option">北单</div>
+                <div class="btn-option">双色球</div>
+                <div class="btn-option">大乐透</div>
+                <div class="btn-option">排列三</div>
+                <div class="btn-option">排列五</div>
+                <div class="btn-option">3D</div>
+                <div class="btn-option">七星彩</div>
+                <div class="btn-option">七乐彩</div>
+                <div class="btn-option">足彩</div>
+                <div class="btn-option">冠亚军</div>
+                <div class="btn-option">快乐8</div>
+                <div class="btn-option">胜负过关</div>
+            </div>
+
+            <!-- 竞彩足球二级玩法面板（新增混合过关） -->
+            <div class="sub-play-panel" id="footballSubPanel">
+                <div class="filter-section-title">足球玩法（单选）</div>
+                <div class="btn-grid">
+                    <div class="btn-option active">胜平负</div>
+                    <div class="btn-option">让球胜平负</div>
+                    <div class="btn-option">比分</div>
+                    <div class="btn-option">进球数</div>
+                    <div class="btn-option">半全场</div>
+                    <div class="btn-option">混合过关</div>
+                </div>
+            </div>
+
+            <!-- 竞彩篮球二级玩法面板（新增混合过关） -->
+            <div class="sub-play-panel" id="basketballSubPanel">
+                <div class="filter-section-title">篮球玩法（单选）</div>
+                <div class="btn-grid">
+                    <div class="btn-option active">胜负</div>
+                    <div class="btn-option">让分胜负</div>
+                    <div class="btn-option">大小分</div>
+                    <div class="btn-option">胜分差</div>
+                    <div class="btn-option">混合过关</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 金额筛选 -->
+        <div class="filter-section">
+            <div class="filter-section-title">金额筛选</div>
+            <div class="input-row" style="margin-bottom: 0;">
+                <div class="amount-group">
+                    <input type="number" id="minAmount" placeholder="最小值">
+                    <span>—</span>
+                    <input type="number" id="maxAmount" placeholder="最大值">
+                </div>
+            </div>
+            <div class="error-msg" id="amountError">输入金额有误</div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-section-title">订单类型</div>
+            <div class="btn-group" id="orderTypeGroup">
+                <div class="btn-option active">全部</div>
+                <div class="btn-option">本店订单</div>
+                <div class="btn-option">合作店订单</div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-section-title">时间选择</div>
+            <div class="time-selector">
+                <div class="btn-option active" style="height: 34px;">全部</div>
+                <input type="text" class="date-input" value="2026-10-01">
+                <span style="color: #ccc; font-size: 12px; flex:none;">—</span>
+                <input type="text" class="date-input" value="2026-10-08">
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-section-title">条件查询</div>
+            <div class="input-row">
+                <label>手机号</label>
+                <input type="tel" id="phoneInput" placeholder="请输入11位手机号" maxlength="11">
+            </div>
+            <div class="input-row">
+                <label>订单号</label>
+                <input type="text" id="orderNoInput" placeholder="请输入完整订单号">
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button class="btn-cancel" id="btnCancel">取消</button>
+            <button class="btn-confirm" id="btnConfirm">确定</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ================= 弹层控制 =================
+    const btnOpenFilter = document.getElementById('btnOpenFilter');
+    const filterPanel = document.getElementById('filterPanel');
+    const overlay = document.getElementById('overlay');
+    const btnCancel = document.getElementById('btnCancel');
+    const btnConfirm = document.getElementById('btnConfirm');
+
+    function openFilter() {
+        overlay.style.display = 'block';
+        void overlay.offsetWidth; 
+        overlay.classList.add('show');
+        filterPanel.classList.add('show');
+    }
+
+    function closeFilter() {
+        overlay.classList.remove('show');
+        filterPanel.classList.remove('show');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 300);
+    }
+
+    btnOpenFilter.addEventListener('click', openFilter);
+    overlay.addEventListener('click', closeFilter);
+    btnCancel.addEventListener('click', closeFilter);
+
+    // ================= 联级选择（竞彩足球/篮球玩法） =================
+    const lotteryGrid = document.getElementById('lotteryGrid');
+    const footballSubPanel = document.getElementById('footballSubPanel');
+    const basketballSubPanel = document.getElementById('basketballSubPanel');
+
+    lotteryGrid.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!target.classList.contains('btn-option')) return;
+
+        Array.from(lotteryGrid.children).forEach(child => {
+            if(child.classList.contains('btn-option')) child.classList.remove('active');
+        });
+        target.classList.add('active');
+
+        const type = target.getAttribute('data-type');
+        
+        footballSubPanel.classList.remove('show');
+        basketballSubPanel.classList.remove('show');
+
+        if (type === 'football') {
+            footballSubPanel.classList.add('show');
+            resetSubPanelActive(footballSubPanel);
+        } else if (type === 'basketball') {
+            basketballSubPanel.classList.add('show');
+            resetSubPanelActive(basketballSubPanel);
+        }
+    });
+
+    function resetSubPanelActive(panel) {
+        const btns = panel.querySelectorAll('.btn-option');
+        btns.forEach((btn, index) => {
+            if (index === 0) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+    }
+
+    [footballSubPanel, basketballSubPanel].forEach(panel => {
+        panel.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-option')) {
+                const btns = panel.querySelectorAll('.btn-option');
+                btns.forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+            }
+        });
+    });
+
+    // 订单类型单选
+    const orderTypeGroup = document.getElementById('orderTypeGroup');
+    orderTypeGroup.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-option')) {
+            Array.from(orderTypeGroup.children).forEach(child => child.classList.remove('active'));
+            e.target.classList.add('active');
+        }
+    });
+
+    // ================= 金额筛选逻辑 =================
+    const minAmountInput = document.getElementById('minAmount');
+    const maxAmountInput = document.getElementById('maxAmount');
+    const amountError = document.getElementById('amountError');
+    const orderCards = document.querySelectorAll('.order-card');
+
+    function validateAmount() {
+        const minVal = minAmountInput.value.trim();
+        const maxVal = maxAmountInput.value.trim();
+
+        if (minVal !== '' && maxVal !== '') {
+            const min = parseFloat(minVal);
+            const max = parseFloat(maxVal);
+            
+            if (!isNaN(min) && !isNaN(max)) {
+                if (min > max) {
+                    amountError.classList.add('show');
+                    return false;
+                }
+            }
+        }
+        amountError.classList.remove('show');
+        return true;
+    }
+
+    // 输入时实时校验
+    minAmountInput.addEventListener('input', validateAmount);
+    maxAmountInput.addEventListener('input', validateAmount);
+
+    // ================= 核心：点击确定进行真正的筛选 =================
+    btnConfirm.addEventListener('click', () => {
+        // 1. 校验金额
+        if (!validateAmount()) return;
+
+        // 2. 获取输入范围
+        const minVal = minAmountInput.value.trim();
+        const maxVal = maxAmountInput.value.trim();
+        
+        // 未填时，默认最小为0，最大为无穷大
+        const min = minVal === '' ? 0 : parseFloat(minVal);
+        const max = maxVal === '' ? Infinity : parseFloat(maxVal);
+
+        // 3. 遍历所有订单卡片，通过金额判断隐藏或显示
+        orderCards.forEach(card => {
+            // 从界面上获取 "¥ 200.00" 这样的文本，并替换非数字和小数点，转为浮点数
+            const amountText = card.querySelector('.card-amount').textContent;
+            const amount = parseFloat(amountText.replace(/[^\d.]/g, ''));
+
+            // 4. 判断区间
+            if (amount >= min && amount <= max) {
+                card.style.display = 'block'; // 符合条件，显示
+            } else {
+                card.style.display = 'none';  // 不符合条件，隐藏
+            }
+        });
+
+        // 5. 提交成功，关闭面板
+        closeFilter();
+    });
+    
+    // 防止手机号输入非数字
+    document.getElementById('phoneInput').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+    });
+
+});
+</script>
+</body>
+</html>
